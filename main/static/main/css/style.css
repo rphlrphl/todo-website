@@ -1,0 +1,25 @@
+/* .profile {
+    width: 300px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 20px;
+    background-color: #f5f5f5;
+} */
+
+.profile{
+    display: flex;
+    justify-content: center; /* horizontal */
+    align-items: center;     /* vertical */
+    min-height: 50vh;
+    flex-direction: column;  /* stack children vertically */
+    text-align: center;      /* optional for text alignment */
+    gap: 10px;               /* optional spacing between h1 and h3 */
+}
+
+
+
+
+
+
+
+
