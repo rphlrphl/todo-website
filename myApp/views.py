@@ -10,7 +10,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect("main:profile")
+            return redirect("main:team")
     else:
         form = AuthenticationForm()
 
@@ -26,3 +26,4 @@ def signup(response):
     else:
         form = UserCreationForm()
     return render(response, "myApp/signup.html", {"form":form})
+
