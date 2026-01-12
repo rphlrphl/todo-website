@@ -4,10 +4,120 @@
 {% block content %}
 {% include "main/navbar.html" %}
 
-<div class='profile'>
-    <h1>Still have no team?</h1>
-    <h5><a href="#">Create</a> or <a href="#">join</a> a team now!</h5>
+{% if not has_team %}
+  <div class='profile text-center mt-5'>
+      <h1>Still have no team?</h1>
+      <h5>
+          <a href="{% url 'main:create-team' %}" data-bs-toggle="modal" data-bs-target="#createTeamModal">Create</a> or 
+          <a href="#" data-toggle="modal" data-target="#joinTeamModal">join</a> a team now!
+      </h5>
+  </div>
+{% else %}
+  <h5>
+    <a href="{% url 'main:create-team' %}" data-bs-toggle="modal" data-bs-target="#createTeamModal">Create</a> or 
+    <a href="#" data-toggle="modal" data-target="#joinTeamModal">join another team</a>
+  </h5>
+  {% for membership in memberships %}
+      <li>
+          <a href="{% url 'main:team-detail' membership.team.id %}">
+              {{ membership.team.title }}
+          </a> 
+          - ({{ membership.role|title }})
+      </li>
+  {% endfor %}
+{% endif %}
+
+<!-- Join Team Modal -->
+<div class="modal fade" id="joinTeamModal" tabindex="-1" role="dialog" aria-labelledby="joinTeamLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="joinTeamLabel">Join a Team</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <form id="joinTeamForm">
+        {% csrf_token %}
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="teamCode">Invite Code</label>
+                <input type="text" class="form-control" id="teamCode" name="code" placeholder="Paste invite code here" required>
+            </div>
+            <div id="joinTeamFeedback" class="text-success mt-2"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Join Team</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
-
 {% endblock %}
+
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('joinTeamForm');
+    const feedback = document.getElementById('joinTeamFeedback');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // prevent default form submit
+
+        const code = document.getElementById('teamCode').value;
+        const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        fetch("{% url 'main:join-team' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                feedback.classList.remove('text-success');
+                feedback.classList.add('text-danger');
+                feedback.textContent = data.error;
+            } else if (data.success) {
+                feedback.classList.remove('text-danger');
+                feedback.classList.add('text-success');
+                feedback.textContent = data.success;
+
+                // Close the modal after a short delay
+                setTimeout(() => {
+                    const joinModal = bootstrap.Modal.getInstance(document.getElementById('joinTeamModal'));
+                    joinModal.hide();
+                    form.reset();
+                    feedback.textContent = '';
+                    location.reload(); // refresh team list
+                }, 1000);
+            } else if (data.info) {
+                feedback.classList.remove('text-success');
+                feedback.classList.add('text-info');
+                feedback.textContent = data.info;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            feedback.classList.remove('text-success');
+            feedback.classList.add('text-danger');
+            feedback.textContent = "Something went wrong!";
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

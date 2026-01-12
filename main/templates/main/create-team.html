@@ -1,0 +1,17 @@
+{% extends "main/base.html" %}
+{% comment %} {% load crispy_forms_tags %} {% endcomment %}
+{% block title %}Create Team{% endblock %}
+
+
+{% block content %}
+    <div class="d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card p-4" style="width: 400px;">
+            <h3 class="card-title text-center">Create a Team</h3>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary btn-block mt-3">Create</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

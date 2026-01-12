@@ -1,0 +1,100 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ team.title }}</h1>
+    <p>Status: <strong>{{ team.get_status_display }}</strong></p>
+    <p>Created by: {{ team.created_by.username }} on {{ team.created_at|date }}</p>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-4">
+            <h3>Members</h3>
+            <ul class="list-group">
+                {% for mem in memberships %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ mem.user.username }}
+                        <span class="badge bg-primary rounded-pill">{{ mem.role|title }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+            
+            {% if my_role == 'supervisor' %}
+                <a href="#" 
+                class="btn btn-sm btn-outline-info mt-3" 
+                id="generate-invite-btn"
+                data-team-id="{{ team.id }}">
+                + Invite New Member
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="col-md-8">
+            <h3>Team Tasks</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Deadline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr>
+                            <td>{{ task.title }}</td>
+                            <td>{{ task.created_by.username }}</td>
+                            <td>{{ task.get_status_display }}</td>
+                            <td>{{ task.deadline|date:"M d, Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4">No tasks yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('generate-invite-btn');
+
+    btn.addEventListener('click', function(e) {
+        e.preventDefault(); // prevent default link behavior
+        const teamId = btn.dataset.teamId;
+
+        fetch(`/main/team/${teamId}/invite/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+                alert(data.error);
+                return;
+            }
+
+            const code = data.invite_code;
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(code).then(() => {
+                alert(`Invite code copied to clipboard: ${code}`);
+            }).catch(err => {
+                alert(`Failed to copy invite code. Code: ${code}`);
+            });
+        })
+        .catch(err => {
+            alert('Error generating invite code.');
+            console.error(err);
+        });
+    });
+});
+</script>
+{% endblock %}
