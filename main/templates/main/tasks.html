@@ -1,9 +1,60 @@
 {% extends "main/base.html" %}
-{% block title %}Profile{% endblock %}
+{% block title %}My Tasks{% endblock %}
 
 {% block content %}
 {% include "main/navbar.html" %}
 
-<h1>hello world</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Tasks</h1>
+        <span class="badge bg-secondary">Sorted by Priority (Max-Heap)</span>
+    </div>
 
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Task</th>
+                    <th>Team</th>
+                    <th>Deadline</th>
+                    <th>Priority Score</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>
+                        <strong>{{ task.title }}</strong><br>
+                        <small class="text-muted">{{ task.description|truncatechars:50 }}</small>
+                    </td>
+                    <td><span class="badge badge-info">{{ task.team.title }}</span></td>
+                    <td>{{ task.deadline|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% if task.priority_score >= 8 %}
+                            <span class="badge badge-danger">High ({{ task.priority_score }})</span>
+                        {% elif task.priority_score >= 5 %}
+                            <span class="badge badge-warning text-dark">Medium ({{ task.priority_score }})</span>
+                        {% else %}
+                            <span class="badge badge-success">Low ({{ task.priority_score }})</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ task.get_status_display }}</td>
+                    <td>
+                        <form action="{% url 'main:complete-task' task.task_id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No pending tasks. Great job!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

@@ -87,7 +87,21 @@ def team(request):
 
 @login_required
 def tasks(request):
-    context = {}
+# 1. Filter tasks assigned only to the logged-in user and are still pending
+    my_pending_tasks = Task.objects.filter(
+        assigned_to=request.user, 
+        status='pending'
+    )
+    
+    # 2. Feed them into your Max-Heap logic
+    task_heap = TaskMaxHeap(my_pending_tasks)
+    
+    # 3. Get them sorted by priority score
+    sorted_tasks = task_heap.get_sorted_tasks()
+
+    context = {
+        'tasks': sorted_tasks,
+    }
     return render(request, "main/tasks.html", context)
 
 @login_required
