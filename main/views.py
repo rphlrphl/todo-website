@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from .models import TeamMembership, Team, Task
-from .ModelForm import CreateTeam
+from .ModelForm import CreateTeam, CreateTask
 import uuid
 from django.contrib.auth import logout
 from django.contrib import auth
@@ -22,6 +22,28 @@ def team_detail(request, team_id):
     if not user_membership:
         return redirect('main:profile') # Redirect if they try to snoop on other teams
     
+# 1. Handle Form Submission (POST)
+    if request.method == "POST":
+        form = CreateTask(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.team = team
+            task.save()
+            messages.success(request, "Task added successfully!")
+            return redirect('main:team-detail', team_id=team.id)
+        # If form is NOT valid, it falls through to the bottom and 
+        # is passed to context with error messages included.
+    
+    # 2. Handle Page Load (GET)
+    else:
+        form = CreateTask()
+    
+    # 3. Apply the Queryset Limit (Does not exist for GET and POST failure)
+    # Ensure 'members' is a ManyToManyField on Team, or use the filter method discussed earlier
+    if hasattr(team, 'members'):
+        form.fields['assigned_to'].queryset = team.members.all()
+
+    # heap logic
     pending_tasks = team.tasks.filter(status='pending')
     task_heap = TaskMaxHeap(pending_tasks)
     sorted_tasks = task_heap.get_sorted_tasks()
@@ -35,6 +57,7 @@ def team_detail(request, team_id):
         'my_role': user_membership.role,
         'memberships': all_memberships,
         'tasks': sorted_tasks,
+        'form': form,
     }
     return render(request, 'main/team_detail.html', context)
 

@@ -46,6 +46,7 @@ class TeamMembership(models.Model):
 class Task(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
+        ('submitted', 'Submitted'), 
         ('revision', 'Revision'),
         ('accomplished', 'Accomplishsed')
     ) # available status for each task
