@@ -20,14 +20,43 @@
                 {% endfor %}
             </ul>
             
-            {% if my_role == 'supervisor' %}
-                <a href="#" 
-                class="btn btn-sm btn-outline-info mt-3" 
-                id="generate-invite-btn"
-                data-team-id="{{ team.id }}">
-                + Invite New Member
-                </a>
-            {% endif %}
+            <div class = 'd-flex flex-column'>
+                {% if my_role == 'supervisor' %}
+                    <a href="#" 
+                    class="btn btn-sm btn-outline-info mt-3" 
+                    id="generate-invite-btn"
+                    data-team-id="{{ team.id }}">
+                    + Invite New Member
+                    </a>
+                {% endif %}
+
+                {% comment %} <a href = "#" class = "btn btn-sm btn-outline-infor mt-3" id="add-task-btn">+ Add Task</a> {% endcomment %}
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-sm btn-primary mb-2" data-toggle="modal" data-target="#exampleModal">
+                + Add Task
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
         </div>
 
         <div class="col-md-8">
@@ -35,19 +64,25 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Task ID</th>
                         <th>Task</th>
+                        <th>Description</th>
                         <th>Assigned To</th>
                         <th>Status</th>
                         <th>Deadline</th>
+                        <th>Priority Score</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for task in tasks %}
                         <tr>
+                            <td>{{ task.task_id }}</td>
                             <td>{{ task.title }}</td>
-                            <td>{{ task.created_by.username }}</td>
+                            <td style="max-width: 250px; word-wrap: break-word; white-space: normal;">{{ task.description }}</td>
+                            <td>{{ task.assigned_to.username }}</td>
                             <td>{{ task.get_status_display }}</td>
                             <td>{{ task.deadline|date:"M d, Y" }}</td>
+                            <td>{{ task.priority_score }}</td>
                         </tr>
                     {% empty %}
                         <tr><td colspan="4">No tasks yet.</td></tr>

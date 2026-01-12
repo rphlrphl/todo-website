@@ -12,10 +12,10 @@
         <a class="nav-link" href="{% url 'main:team' %}">Team</a>
       </li>
       <li class="nav-item {% if request.resolver_match.url_name == 'tasks' %}active{% endif %}">
-        <a class="nav-link" href="{% url 'main:tasks' %}">Tasks</a>
+        <a class="nav-link" href="{% url 'main:tasks' %}">My Tasks</a>
       </li>
       <li class="nav-item {% if request.resolver_match.url_name == 'accomplished-tasks' %}active{% endif %}">
-        <a class="nav-link" href="{% url 'main:accomplished-tasks' %}">Accomplished Tasks</a>
+        <a class="nav-link" href="{% url 'main:accomplished-tasks' %}">My Accomplished Tasks</a>
       </li>
     </ul>
 

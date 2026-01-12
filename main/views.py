@@ -7,6 +7,8 @@ from .ModelForm import CreateTeam
 import uuid
 from django.contrib.auth import logout
 from django.contrib import auth
+from .utils import TaskMaxHeap
+
 
 @login_required
 def signout(request):
@@ -15,28 +17,41 @@ def signout(request):
 
 @login_required
 def team_detail(request, team_id):
-    # 1. Get the team or 404
     team = get_object_or_404(Team, id=team_id)
-    
-    # 2. Security: Check if the logged-in user is actually in this team
     user_membership = TeamMembership.objects.filter(user=request.user, team=team).first()
-    
     if not user_membership:
         return redirect('main:profile') # Redirect if they try to snoop on other teams
+    
+    pending_tasks = team.tasks.filter(status='pending')
+    task_heap = TaskMaxHeap(pending_tasks)
+    sorted_tasks = task_heap.get_sorted_tasks()
 
-    # 3. Get all members of this team to show in a list
     all_memberships = TeamMembership.objects.filter(team=team).select_related('user')
+    # tasks = team.tasks.all()
 
-    # 4. Get tasks for this team
-    tasks = team.tasks.all()
 
     context = {
         'team': team,
         'my_role': user_membership.role,
         'memberships': all_memberships,
-        'tasks': tasks,
+        'tasks': sorted_tasks,
     }
     return render(request, 'main/team_detail.html', context)
+
+@login_required
+def complete_task(request, task_id):
+    task = get_object_or_404(Task, task_id=task_id)
+    team_id = task.team.id
+    pending_tasks = list(Task.objects.filter(team=task.team, status='pending'))
+    heap = TaskMaxHeap(pending_tasks)
+    removed_task = heap.remove_by_id(task_id)
+
+    if removed_task:
+            task.status = 'accomplished'
+            task.save()
+            messages.success(request, f"Task '{task.title}' marked as accomplished!")
+        
+    return redirect('main:team-detail', team_id=team_id)
 
 @login_required
 def team(request):

@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+import math
 
 # Create your models here.
 
@@ -48,12 +50,37 @@ class Task(models.Model):
         ('accomplished', 'Accomplishsed')
     ) # available status for each task
 
+    DIFFICULTY_CHOICES = (
+        (1,'1 - Very Easy'),
+        (2,'2 - Easy'),
+        (3,'3 - Medium'),
+        (4,'4 - Hard'),
+        (5,'5 - Very Hard')
+    )
+
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='tasks')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    task_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(max_length=120)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL,null=True,blank=True,related_name='assigned_tasks')
     deadline = models.DateTimeField()
+    difficulty = models.IntegerField(choices=DIFFICULTY_CHOICES, default=1)
+    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
     def __str__(self):
-        return self.title
+        return f"{self.title} - Assigned to: {self.assigned_to}"
+    
+    @property
+    def priority_score(self):
+        now = timezone.now()
+        time_diff = self.deadline - now
+        days_remaining = time_diff.days
+
+        if days_remaining <= 0:
+            return 10
+        
+        raw_score = self.difficulty + (10/max(days_remaining, 1))
+
+        return min(max(round(raw_score), 1), 10)

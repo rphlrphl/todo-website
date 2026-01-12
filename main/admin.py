@@ -24,5 +24,19 @@ class TeamMembershipAdmin(admin.ModelAdmin):
 # This makes the Tasks visible
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'team', 'status', 'deadline', 'created_by')
+    list_display = (
+        'task_id',
+        'title',
+        'team',
+        'status',
+        'deadline',
+        'created_by',
+        'priority_score_display',
+    )
     list_filter = ('status', 'team')
+
+    def priority_score_display(self, obj):
+        return obj.priority_score
+
+    priority_score_display.short_description = 'Priority Score'
+    priority_score_display.admin_order_field = 'deadline'
