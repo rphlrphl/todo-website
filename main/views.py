@@ -8,7 +8,10 @@ import uuid
 from django.contrib.auth import logout
 from django.contrib import auth
 
-
+@login_required
+def signout(request):
+    logout(request)
+    return redirect('/')
 
 @login_required
 def team_detail(request, team_id):

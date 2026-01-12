@@ -20,7 +20,7 @@
     </ul>
 
     <!-- Right-aligned logout button -->
-    <form action="{% url 'signout' %}" method="post" style="display: inline;">
+    <form action="{% url 'main:signout' %}" method="post" style="display: inline;">
         {% csrf_token %}
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
