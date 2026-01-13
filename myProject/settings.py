@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['focustracker-q4md.onrender.com']
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://focustracker-q4md.onrender.com",
+]
+
 
 # Application definition
 
@@ -127,5 +131,6 @@ STATIC_URL = 'static/'
 
 LOGIN_REDIRECT_URL = "main:profile"
 LOGIN_URL = "login"
+
 
 
