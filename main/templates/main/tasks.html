@@ -42,9 +42,20 @@
                     </td>
                     <td>{{ task.get_status_display }}</td>
                     <td>
-                        <form action="{% url 'main:complete-task' task.task_id %}" method="POST">
+                        <form action="{% url 'main:submit-task' task.task_id %}" method="POST">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+                            {% if task.status == 'pending' or task.status == 'revision' %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-success" 
+                                        data-toggle="modal" 
+                                        data-target="#submitTaskModal" 
+                                        data-taskid="{{ task.task_id }}" 
+                                        data-description="{{ task.description }}">
+                                    Submit
+                                </button>
+                            {% else %}
+                                <button class="btn btn-sm btn-success" disabled>Submit</button>
+                            {% endif %}
                         </form>
                     </td>
                 </tr>
@@ -55,6 +66,67 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div class="modal fade" id="submitTaskModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Submit Task</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="submitTaskForm" method="POST" action="">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="modal-description">Final Task Description/Notes:</label>
+                                <textarea class="form-control" id="modal-description" name="description" rows="4" maxlength='120' required></textarea>
+                                <small id="char-count" class="form-text text-muted">120 characters remaining</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Confirm Submission</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $('#submitTaskModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var taskId = button.data('taskid'); 
+        var description = button.data('description'); 
+
+        var modal = $(this);
+        
+        // FIX: This now matches your urls.py: path("task/<int:task_id>/submit", ...)
+        modal.find('#submitTaskForm').attr('action', '/main/task/' + taskId + '/submit');
+        
+        modal.find('#modal-description').val(description);
+        
+        // Character counter logic
+        const maxLength = 120;
+        const currentLength = description ? description.length : 0;
+        const charCountEl = document.getElementById('char-count');
+        
+        if (charCountEl) {
+            charCountEl.textContent = `${maxLength - currentLength} characters remaining`;
+        }
+    });
+
+    // Real-time counter listener
+    document.getElementById('modal-description').addEventListener('input', function() {
+        const remaining = 120 - this.value.length;
+        const charCountEl = document.getElementById('char-count');
+        if (charCountEl) {
+            charCountEl.textContent = `${remaining} characters remaining`;
+        }
+    });
+</script>
 {% endblock %}

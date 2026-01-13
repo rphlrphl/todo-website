@@ -8,6 +8,7 @@ import uuid
 from django.contrib.auth import logout
 from django.contrib import auth
 from .utils import TaskMaxHeap
+from django.core.paginator import Paginator
 
 
 @login_required
@@ -44,9 +45,13 @@ def team_detail(request, team_id):
         form.fields['assigned_to'].queryset = team.members.all()
 
     # heap logic
-    pending_tasks = team.tasks.filter(status='pending')
+    pending_tasks = team.tasks.filter(status__in=['pending', 'submitted', 'revision'])
     task_heap = TaskMaxHeap(pending_tasks)
     sorted_tasks = task_heap.get_sorted_tasks()
+
+    paginator = Paginator(sorted_tasks, 5) # Show 5 tasks per page
+    page_number = request.GET.get('page')
+    tasks_page = paginator.get_page(page_number)
 
     all_memberships = TeamMembership.objects.filter(team=team).select_related('user')
     # tasks = team.tasks.all()
@@ -56,25 +61,63 @@ def team_detail(request, team_id):
         'team': team,
         'my_role': user_membership.role,
         'memberships': all_memberships,
-        'tasks': sorted_tasks,
+        'tasks': tasks_page,
         'form': form,
     }
     return render(request, 'main/team_detail.html', context)
 
-@login_required
-def complete_task(request, task_id):
-    task = get_object_or_404(Task, task_id=task_id)
-    team_id = task.team.id
-    pending_tasks = list(Task.objects.filter(team=task.team, status='pending'))
-    heap = TaskMaxHeap(pending_tasks)
-    removed_task = heap.remove_by_id(task_id)
+# @login_required
+# def complete_task(request, task_id):
+#     task = get_object_or_404(Task, task_id=task_id)
+#     team_id = task.team.id
+#     pending_tasks = list(Task.objects.filter(team=task.team, status='pending'))
+#     heap = TaskMaxHeap(pending_tasks)
+#     removed_task = heap.remove_by_id(task_id)
 
-    if removed_task:
-            task.status = 'accomplished'
-            task.save()
-            messages.success(request, f"Task '{task.title}' marked as accomplished!")
+#     if removed_task:
+#             task.status = 'accomplished'
+#             task.save()
+#             messages.success(request, f"Task '{task.title}' marked as accomplished!")
         
-    return redirect('main:team-detail', team_id=team_id)
+#     return redirect('main:team-detail', team_id=team_id)
+
+@login_required
+def submit_task(request, task_id):
+    if request.method == 'POST':
+        task = get_object_or_404(Task, task_id=task_id)
+        
+        # Get the updated description from the POST data
+        new_description = request.POST.get('description')
+        
+        task.status = 'submitted'
+        if new_description:
+            task.description = new_description
+        
+        task.save()
+        messages.success(request, f"Task {task_id} submitted successfully!")
+
+    # Redirect back to the team detail page or tasks list
+    # Use task.team.id to stay on the same team page if preferred
+    return redirect('main:team-detail', team_id=task.team.id)
+
+@login_required
+def revise_task(request, task_id):
+    if request.method == 'POST':
+        task = get_object_or_404(Task, task_id=task_id)
+        
+        new_description = request.POST.get('description')
+        new_deadline = request.POST.get('deadline')
+        
+        task.status = 'revision' # Assuming 'revision' is your status code
+        if new_description:
+            task.description = new_description
+        if new_deadline:
+            task.deadline = new_deadline
+        
+        task.save()
+        messages.warning(request, f"Task {task_id} sent back for revision.")
+
+    return redirect('main:team-detail', team_id=task.team.id)
 
 @login_required
 def team(request):
@@ -87,16 +130,14 @@ def team(request):
 
 @login_required
 def tasks(request):
-# 1. Filter tasks assigned only to the logged-in user and are still pending
-    my_pending_tasks = Task.objects.filter(
+    # Use __in to fetch both pending and submitted tasks
+    my_tasks = Task.objects.filter(
         assigned_to=request.user, 
-        status='pending'
+        status__in=['pending', 'submitted', 'revision'] 
     )
     
-    # 2. Feed them into your Max-Heap logic
-    task_heap = TaskMaxHeap(my_pending_tasks)
-    
-    # 3. Get them sorted by priority score
+    # Feed them into your Max-Heap logic
+    task_heap = TaskMaxHeap(my_tasks)
     sorted_tasks = task_heap.get_sorted_tasks()
 
     context = {
