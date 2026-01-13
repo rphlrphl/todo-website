@@ -73,14 +73,17 @@
                     {% for task in tasks %}
                         <tr>
                             {% if my_role == 'supervisor' %}
-                            <td>
-                                <button type="button" class="btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"></path>
-  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"></path>
-</svg>
-              </button>
-                            </td>    
+                                <td>
+                                    <form action="{% url 'main:delete-task' task.task_id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this task?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link text-danger p-0" title="Delete Task">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"></path>
+                                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </td>  
                             {% endif %}
                             <td>{{ task.task_id }}</td>
                             <td>{{ task.title }}</td>
@@ -227,6 +230,31 @@
         </button>
       </div>
       <div class="modal-body">
+
+        {% if my_role == 'supervisor' and acc_stack %}
+        <div class="card mb-3 border-danger">
+            <div class="card-body py-2">
+                <h6 class="card-title text-danger">Supervisor Stack Controls</h6>
+                <form action="{% url 'main:bulk-delete-acc' team.id %}" method="POST" class="row g-2 align-items-center">
+                    {% csrf_token %}
+                    <div class="col-auto">
+                        <select name="delete_type" id="delete_type" class="form-select form-select-sm" onchange="toggleNumInput(this)">
+                            <option value="count">Delete Top N</option>
+                            <option value="all">Clear All History</option>
+                        </select>
+                    </div>
+                    <div class="col-auto" id="num_input_container">
+                        <input type="number" name="num_to_delete" class="form-control form-control-sm" placeholder="Qty" min="1" max="{{ acc_stack.paginator.count }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Confirm bulk deletion?')">Execute</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <hr>
+        {% endif %}
+        
         <div class="table-responsive">
             <table class="table table-sm">
                 <thead>
@@ -343,6 +371,15 @@ document.addEventListener("DOMContentLoaded", function() {
             $('#viewAccomplishedTasksModal').modal('show');
         }
     });
+
+function toggleNumInput(select) {
+    const container = document.getElementById('num_input_container');
+    if (select.value === 'all') {
+        container.style.visibility = 'hidden';
+    } else {
+        container.style.visibility = 'visible';
+    }
+}
 </script>
 {% endblock %}
 

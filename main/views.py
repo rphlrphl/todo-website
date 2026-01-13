@@ -80,6 +80,62 @@ def team_detail(request, team_id):
 
 @never_cache
 @login_required
+def delete_task(request, task_id):
+    if request.method == 'POST':
+        task = get_object_or_404(Task, task_id=task_id)
+        
+        # Security Check: Ensure only the supervisor can delete
+        membership = TeamMembership.objects.filter(user=request.user, team=task.team).first()
+        if not membership or membership.role != 'supervisor':
+            messages.error(request, "You do not have permission to delete tasks.")
+            return redirect('main:team-detail', team_id=task.team.id)
+
+        task_title = task.title
+        task.delete()
+        
+        messages.success(request, f"Task '{task_title}' has been deleted.")
+        
+    return redirect('main:team-detail', team_id=task.team.id)
+
+@never_cache
+@login_required
+def bulk_delete_accomplished(request, team_id):
+    if request.method == 'POST':
+        team = get_object_or_404(Team, id=team_id)
+        
+        membership = TeamMembership.objects.filter(user=request.user, team=team).first()
+        if not membership or membership.role != 'supervisor':
+            messages.error(request, "Permission denied.")
+            return redirect('main:team-detail', team_id=team.id)
+
+        # Newest accomplished tasks first (top of the stack)
+        acc_tasks = Task.objects.filter(team=team, status='accomplished').order_by('-updated_at')
+        
+        delete_type = request.POST.get('delete_type')
+        
+        if delete_type == 'all':
+            count = acc_tasks.count()
+            acc_tasks.delete()
+            messages.success(request, f"Cleared all {count} accomplished tasks.")
+        
+        elif delete_type == 'count':
+            try:
+                num_to_delete = int(request.POST.get('num_to_delete', 0))
+                # Change 'id' to 'task_id' here
+                ids_to_delete = list(acc_tasks.values_list('task_id', flat=True)[:num_to_delete])
+                
+                # Filter using 'task_id__in'
+                Task.objects.filter(task_id__in=ids_to_delete).delete()
+                messages.success(request, f"Successfully removed the last {len(ids_to_delete)} tasks.")
+            except ValueError:
+                messages.error(request, "Invalid number provided.")
+
+        return redirect(f"/main/team/{team.id}/?show_modal=true")
+    
+    return redirect('main:team')
+
+@never_cache
+@login_required
 def complete_task(request, task_id):
     if request.method == 'POST':
         task = get_object_or_404(Task, task_id=task_id)
