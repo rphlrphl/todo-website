@@ -13,7 +13,7 @@ urlpatterns = [
     path("create-team", views.create_team, name = 'create-team'),
     path('join-team/', views.join_team, name='join-team'),
     path('signout/', views.signout, name='signout'),
-    # path("task/<int:task_id>/complete/", views.complete_task, name='complete-task'),
+    path("task/<int:task_id>/complete/", views.complete_task, name='complete-task'),
     path("task/<int:task_id>/submit", views.submit_task, name='submit-task'),
     path("task/<int:task_id>/revise/", views.revise_task, name='revise-task')
 ]

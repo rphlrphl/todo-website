@@ -7,7 +7,7 @@ from .ModelForm import CreateTeam, CreateTask
 import uuid
 from django.contrib.auth import logout
 from django.contrib import auth
-from .utils import TaskMaxHeap
+from .utils import TaskMaxHeap, Stack
 from django.core.paginator import Paginator
 
 
@@ -66,20 +66,24 @@ def team_detail(request, team_id):
     }
     return render(request, 'main/team_detail.html', context)
 
-# @login_required
-# def complete_task(request, task_id):
-#     task = get_object_or_404(Task, task_id=task_id)
-#     team_id = task.team.id
-#     pending_tasks = list(Task.objects.filter(team=task.team, status='pending'))
-#     heap = TaskMaxHeap(pending_tasks)
-#     removed_task = heap.remove_by_id(task_id)
-
-#     if removed_task:
-#             task.status = 'accomplished'
-#             task.save()
-#             messages.success(request, f"Task '{task.title}' marked as accomplished!")
+@login_required
+def complete_task(request, task_id):
+    if request.method == 'POST':
+        task = get_object_or_404(Task, task_id=task_id)
         
-#     return redirect('main:team-detail', team_id=team_id)
+        # Security Check: Ensure only the supervisor of this team can complete it
+        membership = TeamMembership.objects.filter(user=request.user, team=task.team).first()
+        if not membership or membership.role != 'supervisor':
+            messages.error(request, "You do not have permission to approve tasks.")
+            return redirect('main:team-detail', team_id=task.team.id)
+
+        # Update status
+        task.status = 'accomplished'
+        task.save()
+        
+        messages.success(request, f"Task '{task.title}' has been approved and moved to accomplished.")
+        
+    return redirect('main:team-detail', team_id=task.team.id)
 
 @login_required
 def submit_task(request, task_id):
@@ -98,7 +102,7 @@ def submit_task(request, task_id):
 
     # Redirect back to the team detail page or tasks list
     # Use task.team.id to stay on the same team page if preferred
-    return redirect('main:team-detail', team_id=task.team.id)
+    return redirect('main:tasks')
 
 @login_required
 def revise_task(request, task_id):
@@ -147,7 +151,23 @@ def tasks(request):
 
 @login_required
 def accomplished_tasks(request):
-    context = {}
+
+    my_tasks = Task.objects.filter(
+        assigned_to=request.user,
+        status='accomplished'
+    ).order_by('task_id')
+
+    task_stack = Stack(my_tasks)
+    display_stack = task_stack.get_task_stack()
+
+    paginator = Paginator(display_stack, 5) # Show 5 tasks per page
+    page_number = request.GET.get('page')
+    tasks_page = paginator.get_page(page_number)
+
+    context = {
+        'tasks' : tasks_page,
+        'stack' : tasks_page
+    }
     return render(request, "main/accomplished-tasks.html", context)
 
 @login_required

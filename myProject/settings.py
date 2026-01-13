@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-*!j18vo$zadm79z4_ichx!n-0y#^k#csilt$4==q)_tba(7w-%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['focustracker-q4md.onrender.com']
+ALLOWED_HOSTS = ['focustracker-q4md.onrender.com',
+                 '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
     "https://focustracker-q4md.onrender.com",
@@ -131,6 +132,5 @@ STATIC_URL = 'static/'
 
 LOGIN_REDIRECT_URL = "main:profile"
 LOGIN_URL = "login"
-
 
 

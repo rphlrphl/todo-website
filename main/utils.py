@@ -72,3 +72,26 @@ class TaskMaxHeap:
         while temp_heap.heap:
             sorted_list.append(temp_heap.pop_max())
         return sorted_list
+    
+class Stack:
+    def __init__(self, tasks=None):
+        # Initialize with a copy to avoid side effects if a list is passed
+        self.stack = list(tasks) if tasks else []
+
+    def push(self, task):
+        self.stack.append(task)
+
+    def pop(self):
+        if not self.stack:
+            return None
+        return self.stack.pop()
+
+    def peek(self):
+        if not self.stack:
+            return None
+        return self.stack[-1]
+
+    def get_task_stack(self):
+        """Returns a list of tasks in the order they would be popped (LIFO)."""
+        # We slice [::-1] to show the top of the stack first without destroying it
+        return self.stack
