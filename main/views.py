@@ -9,13 +9,15 @@ from django.contrib.auth import logout
 from django.contrib import auth
 from .utils import TaskMaxHeap, Stack
 from django.core.paginator import Paginator
+from django.views.decorators.cache import never_cache
 
-
+@never_cache
 @login_required
 def signout(request):
     logout(request)
     return redirect('/')
 
+@never_cache
 @login_required
 def team_detail(request, team_id):
     team = get_object_or_404(Team, id=team_id)
@@ -76,6 +78,7 @@ def team_detail(request, team_id):
     }
     return render(request, 'main/team_detail.html', context)
 
+@never_cache
 @login_required
 def complete_task(request, task_id):
     if request.method == 'POST':
@@ -95,6 +98,7 @@ def complete_task(request, task_id):
         
     return redirect('main:team-detail', team_id=task.team.id)
 
+@never_cache
 @login_required
 def submit_task(request, task_id):
     if request.method == 'POST':
@@ -114,6 +118,7 @@ def submit_task(request, task_id):
     # Use task.team.id to stay on the same team page if preferred
     return redirect('main:tasks')
 
+@never_cache
 @login_required
 def revise_task(request, task_id):
     if request.method == 'POST':
@@ -133,6 +138,7 @@ def revise_task(request, task_id):
 
     return redirect('main:team-detail', team_id=task.team.id)
 
+@never_cache
 @login_required
 def team(request):
     memberships = TeamMembership.objects.filter(user=request.user)
@@ -142,6 +148,7 @@ def team(request):
     }
     return render(request, "main/team.html", context)
 
+@never_cache
 @login_required
 def tasks(request):
     # Use __in to fetch both pending and submitted tasks
@@ -159,6 +166,7 @@ def tasks(request):
     }
     return render(request, "main/tasks.html", context)
 
+@never_cache
 @login_required
 def accomplished_tasks(request):
 
@@ -180,6 +188,7 @@ def accomplished_tasks(request):
     }
     return render(request, "main/accomplished-tasks.html", context)
 
+@never_cache
 @login_required
 def create_team(request):
     context = {}
@@ -201,6 +210,7 @@ def create_team(request):
         form = CreateTeam()
     return render(request, 'main/create-team.html', {'form' : form})
 
+@never_cache
 @login_required
 def generate_invite(request, team_id):
     team = get_object_or_404(Team, id=team_id)
@@ -218,6 +228,7 @@ def generate_invite(request, team_id):
 
     return JsonResponse({'invite_code': team.invite_code})
 
+@never_cache
 @login_required
 def join_team(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':

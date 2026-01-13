@@ -13,18 +13,59 @@
       </h5>
   </div>
 {% else %}
-  <h5>
-    <a href="{% url 'main:create-team' %}" data-bs-toggle="modal" data-bs-target="#createTeamModal">Create</a> or 
-    <a href="#" data-toggle="modal" data-target="#joinTeamModal">join another team</a>
-  </h5>
-  {% for membership in memberships %}
-      <li>
-          <a href="{% url 'main:team-detail' membership.team.id %}">
-              {{ membership.team.title }}
-          </a> 
-          - ({{ membership.role|title }})
-      </li>
-  {% endfor %}
+<div class="container-fluid bg-light d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card shadow border-0" style="width: 100%; max-width: 600px;"> <div class="card-header bg-white pt-5 pb-4 text-center border-bottom-0">
+            <h1 class="display-6 fw-bold text-dark mb-3">Project Workspace</h1>
+            <p class="text-muted mb-4">Select a team to manage tasks or start a new collaboration.</p>
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'main:create-team' %}" 
+                   class="btn btn-primary px-4 shadow-sm" 
+                   data-bs-toggle="modal" 
+                   data-bs-target="#createTeamModal">
+                   <i class="bi bi-plus-lg"></i> Create Team
+                </a>
+                <a href="#" 
+                   class="btn btn-outline-secondary px-4" 
+                   data-toggle="modal" 
+                   data-target="#joinTeamModal">
+                   Join via Code
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">
+                Your Active Teams ({{ memberships|length }})
+            </h6>
+            
+            <div class="list-group">
+                {% for membership in memberships %}
+                    <a href="{% url 'main:team-detail' membership.team.id %}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-4 mb-2 border rounded shadow-sm">
+                        <div>
+                            <h5 class="mb-1 fw-bold">{{ membership.team.title }}</h5>
+                            <small class="text-muted">Role: {{ membership.role|title }}</small>
+                        </div>
+                        <div class="text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="text-center py-5 border rounded bg-white">
+                        <p class="text-muted">You haven't joined any teams yet.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="card-footer bg-transparent text-center pb-4 border-top-0">
+            <small class="text-muted">Signed in as <strong>{{ request.user.username }}</strong></small>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 <!-- Join Team Modal -->

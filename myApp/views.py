@@ -29,13 +29,13 @@ def login_view(request):
 def session_status(request):
     return JsonResponse({'logged_in': request.user.is_authenticated})
 
-def signup(response):
-    # context = {}
-    if response.method == "POST":
-        form = UserCreationForm(response.POST)
+def signup(request): # Changed 'response' to 'request' for standard naming
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("/")
+            # Redirect to your login page name
+            return redirect("/") 
     else:
         form = UserCreationForm()
-    return render(response, "myApp/signup.html", {"form":form})
+    return render(request, "myApp/signup.html", {"form": form})
