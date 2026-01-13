@@ -218,20 +218,53 @@
 </div>
 
 {% comment %} VIEW ACCOMPLISHED TASKS ON TEAM {% endcomment %}
-<div class="modal fade" id="viewAccomplishedTasksModal" tabindex="-1" aria-labelledby="viewAccomplishedTasksModal" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
+<div class="modal fade" id="viewAccomplishedTasksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg"> <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="viewAccomplishedTasksModal">Accomplished Tasks</h5>
+        <h5 class="modal-title">Accomplished Tasks ({{ team.title }})</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Description</th>
+                        <th>Finished</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in acc_stack %} 
+                    <tr>
+                        <td><strong>{{ task.title }}</strong></td>
+                        <td>{{ task.description }}</td>
+                        <td><small>{{ task.updated_at|date:"M d" }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center">No tasks completed yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if acc_tasks.has_other_pages %}
+            <nav>
+                <ul class="pagination pagination-sm justify-content-center">
+                    {% if acc_tasks.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?acc_page={{ acc_tasks.previous_page_number }}&page={{ tasks.number }}&show_modal=true">Prev</a></li>
+                    {% endif %}
+
+                    <li class="page-item disabled"><span class="page-link">Page {{ acc_tasks.number }} of {{ acc_tasks.paginator.num_pages }}</span></li>
+
+                    {% if acc_tasks.has_next %}
+                        <li class="page-item"><a class="page-link" href="?acc_page={{ acc_tasks.next_page_number }}&page={{ tasks.number }}&show_modal=true">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -302,6 +335,14 @@ document.getElementById('revise-modal-description').addEventListener('input', fu
     const remaining = 120 - this.value.length;
     document.getElementById('revise-char-count').textContent = `${remaining} characters remaining`;
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('show_modal') === 'true') {
+            // Re-opens the modal using Bootstrap's jQuery method
+            $('#viewAccomplishedTasksModal').modal('show');
+        }
+    });
 </script>
 {% endblock %}
 

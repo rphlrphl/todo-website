@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-import math
+
 
 # Create your models here.
 
@@ -67,6 +67,7 @@ class Task(models.Model):
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL,null=True,blank=True,related_name='assigned_tasks')
     deadline = models.DateTimeField()
     difficulty = models.IntegerField(choices=DIFFICULTY_CHOICES, default=1)
+    updated_at = models.DateTimeField(auto_now=True)
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 

@@ -32,6 +32,7 @@ class TaskAdmin(admin.ModelAdmin):
         'deadline',
         'created_by',
         'priority_score_display',
+        'updated_at'
     )
     list_filter = ('status', 'team')
 

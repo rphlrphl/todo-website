@@ -53,6 +53,14 @@ def team_detail(request, team_id):
     page_number = request.GET.get('page')
     tasks_page = paginator.get_page(page_number)
 
+    team_accomplished = team.tasks.filter(status='accomplished').order_by('updated_at')
+    task_stack = Stack(team_accomplished)
+    display_stack = task_stack.get_task_stack()
+
+    acc_paginator = Paginator(display_stack, 5)
+    acc_page_number = request.GET.get('acc_page') 
+    acc_tasks_page = acc_paginator.get_page(acc_page_number)
+
     all_memberships = TeamMembership.objects.filter(team=team).select_related('user')
     # tasks = team.tasks.all()
 
@@ -63,6 +71,8 @@ def team_detail(request, team_id):
         'memberships': all_memberships,
         'tasks': tasks_page,
         'form': form,
+        'acc_stack': acc_tasks_page, 
+        'acc_tasks': acc_tasks_page,
     }
     return render(request, 'main/team_detail.html', context)
 
@@ -155,7 +165,7 @@ def accomplished_tasks(request):
     my_tasks = Task.objects.filter(
         assigned_to=request.user,
         status='accomplished'
-    ).order_by('task_id')
+    ).order_by('updated_at')
 
     task_stack = Stack(my_tasks)
     display_stack = task_stack.get_task_stack()

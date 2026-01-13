@@ -94,4 +94,4 @@ class Stack:
     def get_task_stack(self):
         """Returns a list of tasks in the order they would be popped (LIFO)."""
         # We slice [::-1] to show the top of the stack first without destroying it
-        return self.stack
+        return self.stack[::-1]
